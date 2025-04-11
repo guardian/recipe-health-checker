@@ -24,15 +24,24 @@ type AmountRange struct {
 	Max float32 `json:"max"`
 }
 
+func formatNumber(n float32) string {
+	if n == float32(int64(n)) {
+		return fmt.Sprintf("%.0f", n)
+	} else {
+		return fmt.Sprintf("%.2f", n)
+	}
+}
+
 func (a AmountRange) Render() string {
+
 	if a.Min == a.Max {
 		if a.Min == 0 {
 			return ""
 		} else {
-			return fmt.Sprintf("%f", a.Max)
+			return formatNumber(a.Max)
 		}
 	} else {
-		return fmt.Sprintf("%f - %f", a.Min, a.Max)
+		return fmt.Sprintf("%s - %s", formatNumber(a.Min), formatNumber(a.Max))
 	}
 }
 
@@ -111,11 +120,12 @@ Originally published at: https://www.theguardian.com/{{.CanonicalArticle}}
 {{.Description}}
 
 ## Tags
-Meets dietary requirements for: {{range .SuitableForDietIDs}}{{.}},{{end}}
-Suitable meal types: {{range .MealTypeIDs}}{{.}},{{end}}
-Suitable for celebrations: {{range .CelebrationIDs}}{{.}},{{end}}
-Cuisine styles: {{range .CuisineIDs}}{{.}},{{end}}
+{{if .SuitableForDietIDs}}Meets dietary requirements for: {{range .SuitableForDietIDs}}{{.}},{{end}}{{end}}
+{{if .MealTypeIDs}}Suitable meal types: {{range .MealTypeIDs}}{{.}},{{end}}{{end}}
+{{if .CelebrationIDs}}Suitable for celebrations: {{range .CelebrationIDs}}{{.}},{{end}}{{end}}
+{{if .CuisineIDs}}Cuisine styles: {{range .CuisineIDs}}{{.}},{{end}}{{end}}
 
+## Timings
 {{range .Timings}}{{.Qualifier}} {{ .DurationInMins.Render }} minutes
 {{end}}
 
