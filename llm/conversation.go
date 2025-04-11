@@ -77,7 +77,7 @@ func (m *LLM) generateInput(markdownContent string) *bedrockruntime.ConverseInpu
 		ModelId: &m.ModelId,
 		System: []types.SystemContentBlock{
 			m.systemContentBlock,
-			&types.SystemContentBlockMemberCachePoint{Value: types.CachePointBlock{Type: types.CachePointTypeDefault}},
+			//&types.SystemContentBlockMemberCachePoint{Value: types.CachePointBlock{Type: types.CachePointTypeDefault}},
 		},
 		Messages: []types.Message{
 			requestMsg,
