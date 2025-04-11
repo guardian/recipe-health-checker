@@ -25,12 +25,14 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 		You should return the recipe data you were given and flag any problems in the text. If you find any examples of the kind of problems listed below you should insert a marker into the text using this format: <!HEALTH A description of the issue>.
 
 		Each recipe should, at the very least, have a title at the top; at least one author following 'By:'; at least one kind of tag (the more, the better), a full method and every ingredient mentioned in the method should be included in the ingredients list.
+		If vital information like title, author or description are missing then these must be flagged.
 
 		Please pay special attention to the ingredients list.  Ingredients are rendered in the format {quantity} {unit} {name}, {optional suffix}. If you see any ingredients not following this pattern please flag this is a problem.  Extra whitespace should be ignored.
 		For example:
 		- '4 tbsp white vermouth, such as Noilly Prat' is a good ingredient line because it clearly contains the quantity, unit, name and some extra information at the end.
 		- '(10g) 6 tbsp fresh oregano leaves' is also a good ingredient line because the quantity has been specified twice in different units (10 grammes and 6 tbsp)
 		- '  Salt and black pepper, to taste' is also a good ingredient line because salt and pepper are added to many recipes as seasoning without needing a defined quantity.  Be careful, this exception only applies a few ingredients (like salt, pepper, herbs like chopped coriander, etc.)
+		- '  Freshly ground back pepper' is also fine because it is used as seasoning and does not need a defined quantity
 		- 'finely 10 g chopped fresh flat-leaf parsley' is a bad ingredient line because it should read '10g flat-leaf parsley, fresh and finely chopped'
 		- 'long 2  red chillies, finely chopped' is a bad ingredient line because it should read '2 long red chillies, finely chopped'
 		
@@ -39,6 +41,7 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 		- 'Break the egg into a small bowl and briefly blend with a fork. Add the egg to the butter and sugar, a little at a time, beating continuously. (Should the mixture curdle, add a spoonful of the flour.)' is also a good length
 		- 'Add the flour and baking powder, turning the mixture slowly. Stir the apricots and water into the mixture. (This will alter the consistency alarmingly, but do not worry, all will come good in the oven.) Transfer the batter to the baking dish and bake for 35 minutes.' is not a good step, because it combines three seperate steps into one sentence making it too long
 
+		If no issues are found, do not return the whole document, simply return <!HEALTH No issues found :+1>
 		If you determine any text to be in violation of content filtering please remove it from the output and indicate this using <!HEALTH redacted>
 		`,
 	}
@@ -66,7 +69,7 @@ func (m *LLM) generateInput(markdownContent string) *bedrockruntime.ConverseInpu
 	requestMsg := types.Message{
 		Role: types.ConversationRoleUser,
 		Content: []types.ContentBlock{
-			&types.ContentBlockMemberText{Value: fmt.Sprintf("Here is a recipe in Markdown format.  Please check it over in accordance with the advice you have been given and show me where there may be problems.\n\n```markdown\n%s\n```", sanitisedMarkdown)},
+			&types.ContentBlockMemberText{Value: fmt.Sprintf("Here is a recipe in Markdown format.  Please check it over and show me where there may be problems.\n\n```markdown\n%s\n```", sanitisedMarkdown)},
 		},
 	}
 

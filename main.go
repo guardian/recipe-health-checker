@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/guardian/recipe-health-checker/llm"
 	"github.com/guardian/recipe-health-checker/models"
@@ -72,7 +71,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, i := range recipeIndex.Recipes {
+	for _, i := range recipeIndex.RandomisedSample(5) {
 		recipe, err := getRecipe(*baseUrlPtr, i)
 		if err != nil {
 			log.Fatalf("%s", err)
@@ -89,6 +88,5 @@ func main() {
 			log.Printf("ERROR - %s", err)
 		}
 		println("---------------------------")
-		time.Sleep(time.Second * 10)
 	}
 }
