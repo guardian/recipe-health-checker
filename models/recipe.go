@@ -114,7 +114,7 @@ const markdownTemplate = `
 By: {{if .Contributors}} {{range .Contributors}}{{.}} {{end}}{{else}}{{range .Byline}}{{.}} {{end}}{{end}}
 Originally published at: https://www.theguardian.com/{{.CanonicalArticle}}
 
-{{if .BookCredit}}_{{.BookCredit}}_{{end}}
+{{if .BookCredit}}Credit: _{{.BookCredit}}_{{end}}
 
 ## Description
 {{.Description}}

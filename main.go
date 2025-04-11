@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/guardian/recipe-health-checker/llm"
 	"github.com/guardian/recipe-health-checker/models"
 )
 
@@ -58,7 +60,11 @@ func getRecipe(baseUrl string, i *models.IndexEntry) (*models.StructuredRecipe, 
 
 func main() {
 	baseUrlPtr := flag.String("base", "https://recipes.code.dev-guardianapis.com", "base URL of the recipes API to target")
+	modelName := flag.String("model", "", "bedrock model ID to use")
+	region := flag.String("region", os.Getenv("AWS_REGION"), "AWS region to target")
 	flag.Parse()
+
+	ai := llm.New(context.Background(), *modelName, *region)
 
 	recipeIndex, err := getIndex(*baseUrlPtr)
 	if err != nil {
@@ -75,7 +81,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s", err)
 		}
+		//fmt.Printf("%s by %s", recipe.Title, recipe.Contributors)
 		println(markdown)
+		result, err := ai.RequestReview(context.Background(), markdown)
+		println(result)
+		if err != nil {
+			log.Printf("ERROR - %s", err)
+		}
 		println("---------------------------")
 		time.Sleep(time.Second * 10)
 	}
