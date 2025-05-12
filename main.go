@@ -61,6 +61,7 @@ func main() {
 	baseUrlPtr := flag.String("base", "https://recipes.code.dev-guardianapis.com", "base URL of the recipes API to target")
 	modelName := flag.String("model", "", "bedrock model ID to use")
 	region := flag.String("region", os.Getenv("AWS_REGION"), "AWS region to target")
+	json := flag.Bool("json", false, "Set this to send the recipe as JSNO format as opposed to Markdown")
 	flag.Parse()
 
 	ai := llm.New(context.Background(), *modelName, *region)
@@ -76,13 +77,22 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s", err)
 		}
-		markdown, err := recipe.RenderAsMarkdown()
+
+		var recipeText string
+		var recipeFormat llm.RecipeFormat
+		if *json {
+			recipeText, err = recipe.RenderAsJson()
+			recipeFormat = llm.Json
+		} else {
+			recipeText, err = recipe.RenderAsMarkdown()
+			recipeFormat = llm.Markdown
+		}
 		if err != nil {
 			log.Fatalf("%s", err)
 		}
 		//fmt.Printf("%s by %s", recipe.Title, recipe.Contributors)
-		println(markdown)
-		result, err := ai.RequestReview(context.Background(), markdown)
+		//println(markdown)
+		result, err := ai.RequestReview(context.Background(), recipeText, recipeFormat)
 		println(result)
 		if err != nil {
 			log.Printf("ERROR - %s", err)
