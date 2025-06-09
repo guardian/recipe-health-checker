@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/guardian/recipe-health-checker/elasticsearch"
 	"github.com/guardian/recipe-health-checker/llm"
 	"github.com/guardian/recipe-health-checker/models"
 )
@@ -61,6 +62,9 @@ func main() {
 	baseUrlPtr := flag.String("base", "https://recipes.code.dev-guardianapis.com", "base URL of the recipes API to target")
 	modelName := flag.String("model", "", "bedrock model ID to use")
 	region := flag.String("region", os.Getenv("AWS_REGION"), "AWS region to target")
+	esBase := flag.String("elasticsearch", "https://localhost:8443", "Base URL for elasticsearch to stash the results")
+	noElastic := flag.Bool("no-elastic", false, "Don't output to Elasticsearch")
+
 	json := flag.Bool("json", false, "Set this to send the recipe as JSNO format as opposed to Markdown")
 	flag.Parse()
 
@@ -90,12 +94,20 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s", err)
 		}
-		//fmt.Printf("%s by %s", recipe.Title, recipe.Contributors)
+		fmt.Printf("%s by %s", recipe.Title, recipe.Contributors)
 		//println(markdown)
 		result, err := ai.RequestReview(context.Background(), recipeText, recipeFormat)
 		println(result)
 		if err != nil {
 			log.Printf("ERROR - %s", err)
+			continue
+		}
+		result.RecipeId = i.RecipeID
+		result.ComposerId = i.CapiID
+		result.ModelUsed = *modelName
+		//println(result)
+		if !*noElastic {
+			err = elasticsearch.WriteDoc(esBase, result)
 		}
 		println("---------------------------")
 	}
