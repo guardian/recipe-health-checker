@@ -18,6 +18,13 @@ type LLM struct {
 	systemContentBlock types.SystemContentBlock
 }
 
+type RecipeFormat int
+
+const (
+	Json     RecipeFormat = iota
+	Markdown RecipeFormat = iota
+)
+
 func New(ctx context.Context, modelName string, region string) *LLM {
 	system := types.SystemContentBlockMemberText{
 		Value: `Your job is to proof-read recipes for publication in an app.  You will be presented with a recipe in Markdown format, containing clearly deliniated sections for description, recipe tags, recipe timings, required ingredients (possibly broken down by section) and method steps.
@@ -64,14 +71,30 @@ func newClient(ctx context.Context, region string) *bedrockruntime.Client {
 	return brClient
 }
 
-func (m *LLM) generateInput(markdownContent string) *bedrockruntime.ConverseInput {
+func (m *LLM) generateInput(content string, format RecipeFormat) *bedrockruntime.ConverseInput {
 	sanitiser := regexp.MustCompile("```")
-	sanitisedMarkdown := sanitiser.ReplaceAllString(markdownContent, "") //make sure that markdown can't escape fencing
+	sanitisedContent := sanitiser.ReplaceAllString(content, "") //make sure that markdown can't escape fencing
+
+	contentFmt := "unknown"
+	switch format {
+	case Json:
+		contentFmt = "JSON"
+		break
+	case Markdown:
+		contentFmt = "Markdown"
+		break
+	}
 
 	requestMsg := types.Message{
 		Role: types.ConversationRoleUser,
 		Content: []types.ContentBlock{
-			&types.ContentBlockMemberText{Value: fmt.Sprintf("Here is a recipe in Markdown format.  Please check it over and show me where there may be problems.\n\n```markdown\n%s\n```", sanitisedMarkdown)},
+			&types.ContentBlockMemberText{
+				Value: fmt.Sprintf(
+					"Here is a recipe in %s format.  Please check it over and show me where there may be problems.\n\n```%s\n%s\n```",
+					contentFmt,
+					strings.ToLower(contentFmt),
+					sanitisedContent,
+				)},
 		},
 	}
 
@@ -108,8 +131,8 @@ func extractText(blocks *[]types.ContentBlock) string {
 	return out.String()
 }
 
-func (m *LLM) RequestReview(ctx context.Context, markdownContent string) (string, error) {
-	req := m.generateInput(markdownContent)
+func (m *LLM) RequestReview(ctx context.Context, content string, format RecipeFormat) (string, error) {
+	req := m.generateInput(content, format)
 
 	response, err := m.client.Converse(ctx, req)
 	if err != nil {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"text/template"
@@ -151,5 +152,14 @@ func (r *StructuredRecipe) RenderAsMarkdown() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return buf.String(), nil
+}
+
+func (r *StructuredRecipe) RenderAsJson() (string, error) {
+	bytes, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
