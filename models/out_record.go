@@ -2,6 +2,8 @@ package models
 
 import (
 	"bufio"
+	"github.com/davecgh/go-spew/spew"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -24,7 +26,7 @@ func ParseLLMContent(content *string) *ParsedReturnContent {
 	ctr := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !inMarkdown && strings.HasPrefix(line, "```markdown") {
+		if !inMarkdown && (strings.HasPrefix(line, "```markdown") || strings.HasPrefix(line, "```json")) {
 			out.MarkdownStart = ctr + len(line) + 1 //markdown content starts from the next line (include the newline char)
 			inMarkdown = true
 		} else if inMarkdown && strings.HasPrefix(line, "```") {
@@ -43,6 +45,7 @@ type Record struct {
 	ModelNotes             string    `json:"model_notes"`
 	AnnotationCount        uint32    `json:"annotation_count"`
 	AnnotationSummary      []string  `json:"annotation_summary"`
+	AnnotationSection      []string  `json:"annotation_section"`
 	RecipeId               string    `json:"recipe_id"`
 	ComposerId             string    `json:"composer_id"`
 	Timestamp              time.Time `json:"timestamp"`
@@ -57,18 +60,41 @@ ProcessResultText will parse the content that came from the ML model, separating
 notes and counting annotations
 */
 func (r *Record) ProcessResultText(resultText *string) {
-	locations := ParseLLMContent(resultText)
-	r.AnnotatedText = strings.TrimSpace((*resultText)[locations.MarkdownStart:locations.MarkdownEnd])
-	r.ModelNotes = strings.TrimSpace((*resultText)[locations.NotesStart:locations.NotesEnd])
+	textLen := len(*resultText)
+	if textLen == 0 {
+		log.Printf("WARNING: cannot process result as it was empty")
+	}
 
-	notextractor := regexp.MustCompile(`(?m)<!HEALTH ([^>]+)>`)
+	locations := ParseLLMContent(resultText)
+	spew.Dump(locations)
+	r.AnnotatedText = strings.TrimSpace((*resultText)[locations.MarkdownStart:locations.MarkdownEnd])
+	// Guard against inaccurate calculations pushing is over
+	notesEnd := locations.NotesEnd
+	if notesEnd > textLen {
+		notesEnd = textLen - 2
+	}
+	if locations.NotesStart < notesEnd && locations.NotesEnd > 0 {
+		r.ModelNotes = strings.TrimSpace((*resultText)[locations.NotesStart:notesEnd])
+	}
+
+	notextractor := regexp.MustCompile(`(?m)<!HEALTH(:\S+)* ([^>]+)>`)
 
 	notes := notextractor.FindAllStringSubmatch(r.AnnotatedText, -1)
 	if notes != nil {
 		r.AnnotationCount = uint32(len(notes))
 		r.AnnotationSummary = make([]string, r.AnnotationCount)
+		r.AnnotationSection = make([]string, r.AnnotationCount)
 		for i, match := range notes {
-			r.AnnotationSummary[i] = match[1]
+			if len(match) == 2 {
+				r.AnnotationSummary[i] = match[1]
+			} else if len(match) == 3 {
+				r.AnnotationSummary[i] = match[2]
+				r.AnnotationSection[i] = match[1]
+			} else if len(match) > 3 {
+				log.Printf("WARNING Got more matches than expected on health tag %d", i)
+			} else {
+				log.Printf("WARNING Got health tag %d without any content", i)
+			}
 		}
 	}
 }
