@@ -65,8 +65,8 @@ func main() {
 	region := flag.String("region", os.Getenv("AWS_REGION"), "AWS region to target")
 	esBase := flag.String("elasticsearch", "https://localhost:8443", "Base URL for elasticsearch to stash the results")
 	noElastic := flag.Bool("no-elastic", false, "Don't output to Elasticsearch")
-
-	jsonFormat := flag.Bool("jsonFormat", false, "Set this to send the recipe as JSNO format as opposed to Markdown")
+	elasticIndex := flag.String("output-index", "recipe-problems", "Name of the elasticsearch index to write to")
+	jsonFormat := flag.Bool("jsonFormat", false, "Set this to send the recipe as JSON format as opposed to Markdown")
 	flag.Parse()
 
 	ai := llm.New(context.Background(), *modelName, *region)
@@ -98,17 +98,21 @@ func main() {
 		fmt.Printf("%s by %s", recipe.Title, recipe.Contributors)
 		//println(markdown)
 		result, err := ai.RequestReview(context.Background(), recipeText, recipeFormat)
-		spew.Dump(result)
 		if err != nil {
 			log.Printf("ERROR - %s", err)
 			continue
 		}
+
 		result.RecipeId = i.RecipeID
 		result.ComposerId = i.CapiID
 		result.ModelUsed = *modelName
-		//println(result)
+		spew.Dump(result)
 		if !*noElastic {
-			err = elasticsearch.WriteDoc(esBase, result)
+			err = elasticsearch.WriteDoc(esBase, elasticIndex, result)
+			if err != nil {
+				log.Printf("Unable to write to Elasticsearch: %s", err)
+				break
+			}
 		}
 		println("---------------------------")
 	}

@@ -55,7 +55,6 @@ type Record struct {
 }
 
 /*
-*
 ProcessResultText will parse the content that came from the ML model, separating
 notes and counting annotations
 */

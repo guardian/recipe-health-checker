@@ -2,23 +2,29 @@ package elasticsearch
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/guardian/recipe-health-checker/models"
 	"io"
 	"log"
 	"net/http"
-
-	"github.com/guardian/recipe-health-checker/models"
 )
 
-func WriteDoc(baseUrl *string, rec *models.Record) error {
-	url := fmt.Sprintf("%s/_doc", *baseUrl)
+func WriteDoc(baseUrl *string, indexName *string, rec *models.Record) error {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	urlStr := fmt.Sprintf("%s/%s/_doc", *baseUrl, *indexName)
+	//esUrl, _ := url.Parse(urlStr)
 	jsonData, err := json.Marshal(rec)
 	if err != nil {
 		return err
 	}
 	buffer := bytes.NewReader(jsonData)
-	resp, err := http.Post(url, "application/json", buffer)
+	resp, err := client.Post(urlStr, "application/json", buffer)
 	if err != nil {
 		return err
 	}
@@ -27,7 +33,7 @@ func WriteDoc(baseUrl *string, rec *models.Record) error {
 	if err != nil {
 		log.Printf("WARNING unable to read full response from server: %s", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 201 {
 		var outputString string
 		if maybeContent == nil {
 			outputString = "(no output)"
