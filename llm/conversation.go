@@ -22,7 +22,7 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 	system := types.SystemContentBlockMemberText{
 		Value: `Your job is to proof-read recipes for publication in an app.  You will be presented with a recipe in Markdown format, containing clearly deliniated sections for description, recipe tags, recipe timings, required ingredients (possibly broken down by section) and method steps.
 		
-		You should return the recipe data you were given and flag any problems in the text. If you find any examples of the kind of problems listed below you should insert a marker into the text using this format: <!HEALTH A description of the issue>.
+		You should return the recipe data you were given and flag any problems in the text. If you find any examples of the kind of problems listed below you should insert a marker into the text using this format: <!HEALTH:{recipe-section} A description of the issue>.
 
 		Each recipe should, at the very least, have a title at the top; at least one author following 'By:'; at least one kind of tag (the more, the better), a full method and every ingredient mentioned in the method should be included in the ingredients list.
 		If vital information like title, author or description are missing then these must be flagged.
@@ -40,6 +40,8 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 		- 'Occasionally scrape down the mixture from the sides of the bowl with a rubber spatula.' is a good length of a step
 		- 'Break the egg into a small bowl and briefly blend with a fork. Add the egg to the butter and sugar, a little at a time, beating continuously. (Should the mixture curdle, add a spoonful of the flour.)' is also a good length
 		- 'Add the flour and baking powder, turning the mixture slowly. Stir the apricots and water into the mixture. (This will alter the consistency alarmingly, but do not worry, all will come good in the oven.) Transfer the batter to the baking dish and bake for 35 minutes.' is not a good step, because it combines three seperate steps into one sentence making it too long
+
+		Do not flag capitalization in tag fields as these are re-rendered by the app
 
 		If no issues are found, do not return the whole document, simply return <!HEALTH No issues found :+1>
 		If you determine any text to be in violation of content filtering please remove it from the output and indicate this using <!HEALTH redacted>

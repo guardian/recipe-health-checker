@@ -132,7 +132,7 @@ Originally published at: https://www.theguardian.com/{{.CanonicalArticle}}
 ## Ingredients
 {{range .Ingredients}}
 {{if .RecipeSection }}### {{.RecipeSection}}
-{{end}}{{range .IngredientsList}}{{if .Prefix}}{{.Prefix}} {{end}}{{.Amount.Render}} {{.Unit}} {{.Name}}{{if .Suffix}}, {{.Suffix}}{{end}}
+{{end}}{{range .IngredientsList}}{{.Amount.Render}} {{.Unit}} {{if .Prefix}}{{.Prefix}}{{end}} {{.Name}}{{if .Suffix}}, {{.Suffix}}{{end}}
 {{end}}
 {{end}}
 
