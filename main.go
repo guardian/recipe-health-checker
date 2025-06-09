@@ -67,6 +67,8 @@ func main() {
 	noElastic := flag.Bool("no-elastic", false, "Don't output to Elasticsearch")
 	elasticIndex := flag.String("output-index", "recipe-problems", "Name of the elasticsearch index to write to")
 	jsonFormat := flag.Bool("jsonFormat", false, "Set this to send the recipe as JSON format as opposed to Markdown")
+	startAt := flag.Int("start", 0, "If you want to start partway through the recipes list")
+	limit := flag.Int("limit", -1, "If you want to limit the number of recipes to process")
 	flag.Parse()
 
 	ai := llm.New(context.Background(), *modelName, *region)
@@ -77,7 +79,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, i := range recipeIndex.RandomisedSample(5) {
+	lastIndex := *limit
+	if lastIndex == -1 || lastIndex > len(recipeIndex.Recipes) {
+		lastIndex = len(recipeIndex.Recipes) - 1
+	}
+
+	if *startAt > lastIndex {
+		log.Fatalf("-start value is invalid, check how many recipes there are to process!")
+	}
+
+	log.Printf("Starting at %d and processing %d recipes", *startAt, lastIndex)
+
+	for _, i := range recipeIndex.Recipes[*startAt:lastIndex] {
 		recipe, err := getRecipe(*baseUrlPtr, i)
 		if err != nil {
 			log.Fatalf("%s", err)
