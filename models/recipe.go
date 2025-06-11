@@ -75,8 +75,8 @@ type Timing struct {
 }
 
 type Instruction struct {
-	Description string        `json:"description"`
-	Images      []RecipeImage `json:"images"`
+	Description string `json:"description"`
+	//Images      []RecipeImage `json:"images"`	// - leaving this out at the moment as some recipes incorrectly have strings in this field
 }
 
 type CommerceCTA struct {

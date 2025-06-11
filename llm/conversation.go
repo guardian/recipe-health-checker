@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime/types"
+	"github.com/guardian/recipe-health-checker/models"
 )
 
 type LLM struct {
@@ -131,22 +133,30 @@ func extractText(blocks *[]types.ContentBlock) string {
 	return out.String()
 }
 
-func (m *LLM) RequestReview(ctx context.Context, content string, format RecipeFormat) (string, error) {
+func (m *LLM) RequestReview(ctx context.Context, content string, format RecipeFormat) (*models.Record, error) {
 	req := m.generateInput(content, format)
 
 	response, err := m.client.Converse(ctx, req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if msg, isMsg := response.Output.(*types.ConverseOutputMemberMessage); isMsg {
 		text := extractText(&msg.Value.Content)
 
-		if response.StopReason != types.StopReasonEndTurn {
-			return text, fmt.Errorf("The model stopped unexpectedly: %s", response.StopReason)
+		result := &models.Record{
+			OriginalRecipeSnapshot: content,
+			Timestamp:              time.Now(),
+			InputTokensUsed:        int(*response.Usage.InputTokens),
+			OutputTokensUsed:       int(*response.Usage.OutputTokens),
 		}
-		return text, nil
+		result.ProcessResultText(&text)
+
+		if response.StopReason != types.StopReasonEndTurn {
+			return result, fmt.Errorf("The model stopped unexpectedly: %s", response.StopReason)
+		}
+		return result, nil
 	} else {
-		return "", errors.New("No text was returned from the model")
+		return nil, errors.New("No text was returned from the model")
 	}
 }
