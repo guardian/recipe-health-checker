@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from "react-router";
 import './index.css'
@@ -7,12 +7,13 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {MainWindow} from "./mainwindow.tsx";
 
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <div>Hello world</div>
+        element: <MainWindow/>,
     }
 ]);
 
