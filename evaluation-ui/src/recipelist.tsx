@@ -17,7 +17,7 @@ interface RecipeListProps {
     onReportSelected: (rpt: SingleHitResponse)=>void;
 }
 
-export const RecipeList:React.FC = ()=>{
+export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [pageStart, setPageStart] = useState(0);
     const [pageSize, setPageSize] = useState(25);
@@ -52,6 +52,7 @@ export const RecipeList:React.FC = ()=>{
 
     const handleListItemClick = (index: number) => {
         setSelectedIndex(index);
+        onReportSelected(reports[index]);
     }
 
     return <Paper elevation={3} css={boundingCss}>
