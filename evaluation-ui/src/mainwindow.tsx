@@ -20,7 +20,7 @@ const menuBox = css`
 `;
 
 export const MainWindow:React.FC = () => {
-    const routerParams = useParams();
+    //const routerParams = useParams();
 
     return <div css={boundingCss}>
         <Grid container>
