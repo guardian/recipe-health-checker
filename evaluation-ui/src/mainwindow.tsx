@@ -28,12 +28,12 @@ const reportBox = css`
     flex-grow: 1;
     margin: 0;
     max-width: 60vw;
-    max-height: 47vh;
+    max-height: 43vh;
 `;
 
 const thinBox = css`
     flex: 0;
-    max-height: 240px;
+    height: 75px;
     max-width: 60vw;
 `;
 

@@ -1,5 +1,15 @@
 import React, {useEffect, useState} from "react";
-import {Alert, LinearProgress, ListItemButton, Paper, Snackbar, Stack, Typography} from "@mui/material";
+import {
+    Alert,
+    Grid,
+    LinearProgress,
+    ListItemButton, MenuItem,
+    Pagination,
+    Paper, Select,
+    Snackbar,
+    Stack,
+    Typography
+} from "@mui/material";
 import {css} from "@emotion/react";
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
@@ -36,6 +46,7 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected, onRecipe
     const [loading, setLoading] = useState(false);
     const [lastError, setLastError] = useState<string|undefined>();
     const [recipeContent, setRecipeContent] = useState<Record<string, Recipe>>({});
+    const [pageCount, setPageCount] = useState(1);
 
     useEffect(() => {
         setLoading(true);
@@ -43,6 +54,7 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected, onRecipe
             .then(
                 (result)=>{
                     setReports(result.hits.hits);
+                    setPageCount(result.hits.total.value ? Math.ceil(result.hits.total.value / pageSize) : 0);
                     cacheEverythingInList(result.hits.hits.map(r=>r._source.recipe_id))
                         .then(()=>{
                             setLoading(false);
@@ -100,7 +112,26 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected, onRecipe
         {
             loading ? <LinearProgress/> : undefined
         }
-        <Typography>Found {reports.length} matching recipes</Typography>
+        <Grid container direction="row" justifyContent="space-between">
+            <Grid>
+            <Pagination count={pageCount}
+                        size="large"
+                        onChange={(_,pageNum)=>setPageStart((pageNum-1)*pageSize)}
+            />
+            </Grid>
+            <Grid>
+                <Select variant="filled"
+                        label="Page size"
+                        style={{width: '100px'}}
+                        value={pageSize}
+                        onChange={(evt)=>setPageSize(evt.target.value)}>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={25}>25</MenuItem>
+                    <MenuItem value={50}>50</MenuItem>
+                    <MenuItem value={100}>100</MenuItem>
+                </Select>
+            </Grid>
+        </Grid>
         <List css={recipeList}>
             {
                 reports.map((rpt, idx)=>
