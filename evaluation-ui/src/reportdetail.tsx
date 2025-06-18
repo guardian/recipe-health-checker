@@ -6,6 +6,7 @@ import Markdown from "react-markdown";
 
 interface ReportDetailProps {
     content: SingleHitResponse;
+    showAnnotated: boolean;
 }
 
 const boundingCss = css`
@@ -19,11 +20,11 @@ const scrollingMarkdown = css`
     height: 100%;
     width: 100%;
 `;
-export const ReportDetail:React.FC<ReportDetailProps> = ({content}) => {
+export const ReportDetail:React.FC<ReportDetailProps> = ({content, showAnnotated}) => {
     return <Paper css={boundingCss} elevation={3}>
         <div css={scrollingMarkdown}>
             <Markdown>
-                {content._source.annotated_text}
+                {showAnnotated ? content._source.annotated_text : content._source.snapshot}
             </Markdown>
         </div>
     </Paper>

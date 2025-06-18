@@ -1,9 +1,10 @@
 import React, {useState} from 'react';
 import {css} from "@emotion/react";
-import {Grid, Paper} from "@mui/material";
+import {Grid} from "@mui/material";
 import {RecipeList} from "./recipelist.tsx";
 import {SingleHitResponse} from "./services/models/elastic.ts";
 import {ReportDetail} from "./reportdetail.tsx";
+import {AnnotationDetails} from "./annotationdetails.tsx";
 
 const boundingCss = css`
     width: 100vw;
@@ -38,10 +39,10 @@ export const MainWindow:React.FC = () => {
             </Grid>
             <Grid container spacing={2} direction="column">
                 <Grid css={reportBox}>
-                    <Paper elevation={3} style={{width: "100%", height: "100%"}}></Paper>
+                    {currentReport ? <AnnotationDetails report={currentReport._source}/> : undefined}
                 </Grid>
                 <Grid css={reportBox}>
-                    {currentReport ? <ReportDetail content={currentReport}/> : undefined}
+                    {currentReport ? <ReportDetail content={currentReport} showAnnotated={false}/> : undefined}
                 </Grid>
             </Grid>
         </Grid>
