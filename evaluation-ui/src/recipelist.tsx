@@ -1,16 +1,26 @@
 import React, {useEffect, useState} from "react";
-import {Alert, ListItemButton, Paper, Snackbar, Typography} from "@mui/material";
+import {Alert, LinearProgress, ListItemButton, Paper, Snackbar, Stack, Typography} from "@mui/material";
 import {css} from "@emotion/react";
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
 import {QueryReports} from "./services/DirectElasticLookup.ts";
 import type {SingleHitResponse} from "./services/models/elastic.ts";
+import type {Recipe} from "./services/models/recipe.ts";
+import {cacheEverythingInList, retrieveCacheAsRecord} from "./services/RecipeCache.ts";
+import type {CheckerOutput} from "./services/models/recipe-health-checker.ts";
+import {z} from "zod";
+import {FormatBestDate} from "./utils.ts";
 
 const boundingCss = css`
     width: 95%;
     height: 95%;
-    margin: 1em;
     padding: 0.6em;
+`;
+
+const recipeList = css`
+    height: 98%;
+    overflow-y: scroll;
+    overflow-x: hidden;
 `;
 
 interface RecipeListProps {
@@ -24,16 +34,29 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
     const [reports, setReports] = useState<SingleHitResponse[]>([]);
     const [loading, setLoading] = useState(false);
     const [lastError, setLastError] = useState<string|undefined>();
+    const [recipeContent, setRecipeContent] = useState<Record<string, Recipe>>({});
 
     useEffect(() => {
         setLoading(true);
         QueryReports(pageStart, pageSize)
             .then(
                 (result)=>{
-                    console.log(result);
                     setReports(result.hits.hits);
-                    setLoading(false);
-                    setLastError(undefined);
+                    cacheEverythingInList(result.hits.hits.map(r=>r._source.recipe_id))
+                        .then(()=>{
+                            setLoading(false);
+                            setLastError(undefined);
+                            setRecipeContent(retrieveCacheAsRecord());
+                        })
+                        .catch((err)=>{
+                            setLoading(false);
+                            if(err instanceof Error) {
+                                setLastError(err.message)
+                            } else {
+                                const msg = String(err);
+                                setLastError(msg);
+                            }
+                        })
                 }
             )
             .catch(
@@ -55,13 +78,29 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
         onReportSelected(reports[index]);
     }
 
+    const ImprovedListItem:React.FC<{report:CheckerOutput, source:z.infer<typeof Recipe>}> = ({report, source}) => <ListItemText
+        primary={`${source.title}`}
+        secondary={<Stack>
+            <Typography variant="caption">{source.contributors?.join(",") ?? ""} {source.byline?.join(",") ?? ""}</Typography>
+            <Typography variant="caption">{FormatBestDate(source)}</Typography>
+            <Typography variant="caption">{report.annotation_count} annotations</Typography>
+        </Stack>}
+        />;
+
     return <Paper elevation={3} css={boundingCss}>
+        {
+            loading ? <LinearProgress/> : undefined
+        }
         <Typography>Found {reports.length} matching recipes</Typography>
-        <List style={{overflow: "scroll", height: "100%"}}>
+        <List css={recipeList}>
             {
                 reports.map((rpt, idx)=>
                     <ListItemButton selected={selectedIndex===idx} onClick={()=>handleListItemClick(idx)} key={idx}>
-                        <ListItemText primary={rpt._source.recipe_id} secondary={`${rpt._source.annotation_count} annotations`}/>
+                        {
+                            recipeContent[rpt._source.recipe_id] ?
+                                <ImprovedListItem report={rpt._source} source={recipeContent[rpt._source.recipe_id]}/> :
+                                <ListItemText primary={rpt._source.recipe_id} secondary={`${rpt._source.annotation_count} annotations`}/>
+                        }
                     </ListItemButton>
                 )
             }
