@@ -3,11 +3,9 @@ import type {SingleHitResponse} from "./services/models/elastic.ts";
 import {
     Alert,
     CircularProgress,
-    FormControl,
     FormControlLabel,
     Paper,
     Snackbar,
-    Stack,
     Switch,
     Typography
 } from "@mui/material";

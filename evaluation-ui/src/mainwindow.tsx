@@ -5,6 +5,8 @@ import {RecipeList} from "./recipelist.tsx";
 import {SingleHitResponse} from "./services/models/elastic.ts";
 import {ReportDetail} from "./reportdetail.tsx";
 import {AnnotationDetails} from "./annotationdetails.tsx";
+import {RecipeLinks} from "./links.tsx";
+import type {Recipe} from "./services/models/recipe.ts";
 
 const boundingCss = css`
     width: 100vw;
@@ -29,16 +31,28 @@ const reportBox = css`
     max-height: 47vh;
 `;
 
+const thinBox = css`
+    flex: 0;
+    max-height: 240px;
+    max-width: 60vw;
+`;
+
 export const MainWindow:React.FC = () => {
     //const routerParams = useParams();
     const [currentReport, setCurrentReport] = useState<SingleHitResponse|undefined>();
-    const [selectedSection, setSelectedSection] = useState<string>(undefined);
+    const [selectedSection, setSelectedSection] = useState<string>("");
+    const [recipeContent, setRecipeContent] = useState<Recipe|undefined>();
 
     return <Grid container spacing={2} direction="row" css={boundingCss}>
             <Grid css={menuBox}>
-                <RecipeList onReportSelected={setCurrentReport}/>
+                <RecipeList onReportSelected={setCurrentReport} onRecipeLoaded={setRecipeContent}/>
             </Grid>
             <Grid container spacing={2} direction="column" style={{overflow: 'hidden'}}>
+                <Grid css={thinBox}>
+                    {
+                        recipeContent ? <RecipeLinks recipe={recipeContent}/> : undefined
+                    }
+                </Grid>
                 <Grid css={reportBox}>
                     {currentReport ? <AnnotationDetails report={currentReport._source} onSelectionChange={setSelectedSection}/> : undefined}
                 </Grid>

@@ -25,9 +25,10 @@ const recipeList = css`
 
 interface RecipeListProps {
     onReportSelected: (rpt: SingleHitResponse)=>void;
+    onRecipeLoaded: (recep: Recipe|undefined)=>void;
 }
 
-export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
+export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected, onRecipeLoaded})=>{
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [pageStart, setPageStart] = useState(0);
     const [pageSize, setPageSize] = useState(25);
@@ -72,6 +73,14 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
                 }
             )
     }, [pageStart, pageSize]);
+
+    useEffect(() => {
+        const rpt = reports[selectedIndex];
+
+        if(rpt && recipeContent[rpt._source.recipe_id]) {
+            onRecipeLoaded(recipeContent[rpt._source.recipe_id]);
+        }
+    }, [recipeContent, selectedIndex]);
 
     const handleListItemClick = (index: number) => {
         setSelectedIndex(index);
