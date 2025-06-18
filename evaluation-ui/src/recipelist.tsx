@@ -19,7 +19,7 @@ import type {Recipe} from "./services/models/recipe.ts";
 import {cacheEverythingInList, retrieveCacheAsRecord} from "./services/RecipeCache.ts";
 import type {CheckerOutput} from "./services/models/recipe-health-checker.ts";
 import {z} from "zod";
-import {FormatBestDate} from "./utils.ts";
+import {FormatBestDate, FormatDate} from "./utils.ts";
 
 const boundingCss = css`
     width: 95%;
@@ -103,7 +103,7 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected, onRecipe
         primary={`${source.title}`}
         secondary={<Stack>
             <Typography variant="caption">{source.contributors?.join(",") ?? ""} {source.byline?.join(",") ?? ""}</Typography>
-            <Typography variant="caption">{FormatBestDate(source)}</Typography>
+            <Typography variant="caption">Published {FormatBestDate(source)} / Tested {FormatDate(report.timestamp)}</Typography>
             <Typography variant="caption">{report.annotation_count} annotations</Typography>
         </Stack>}
         />;

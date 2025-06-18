@@ -9,3 +9,12 @@ export function FormatBestDate(source:Recipe) {
         return "(no publish date)"
     }
 }
+
+export function FormatDate(dateString?: string) {
+    if(dateString) {
+        const d = new Date(Date.parse(dateString));
+        return format(d, "eee do MMM yyyy");
+    } else {
+        return undefined;
+    }
+}

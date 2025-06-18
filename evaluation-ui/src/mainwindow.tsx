@@ -38,7 +38,6 @@ const thinBox = css`
 `;
 
 export const MainWindow:React.FC = () => {
-    //const routerParams = useParams();
     const [currentReport, setCurrentReport] = useState<SingleHitResponse|undefined>();
     const [selectedSection, setSelectedSection] = useState<string>("");
     const [recipeContent, setRecipeContent] = useState<Recipe|undefined>();
