@@ -13,6 +13,13 @@ export async function QueryReports(startAt: number, pageSize: number):Promise<El
         from: startAt,
         size: pageSize,
         query,
+        sort: [
+            {
+                annotation_count: {
+                    order: "desc"
+                }
+            }
+        ]
     };
 
     const response = await fetch(url, {

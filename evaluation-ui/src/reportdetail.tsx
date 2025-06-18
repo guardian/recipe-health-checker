@@ -10,17 +10,20 @@ interface ReportDetailProps {
 
 const boundingCss = css`
     padding: 0.2em;
+    height: 100%;
+    width: 100%;
 `;
 
 const scrollingMarkdown = css`
     overflow-y: scroll;
     height: 100%;
+    width: 100%;
 `;
 export const ReportDetail:React.FC<ReportDetailProps> = ({content}) => {
-    return <Paper css={boundingCss}>
+    return <Paper css={boundingCss} elevation={3}>
         <div css={scrollingMarkdown}>
             <Markdown>
-                {content._source.snapshot}
+                {content._source.annotated_text}
             </Markdown>
         </div>
     </Paper>

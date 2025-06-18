@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {ListItemButton, Paper, Typography} from "@mui/material";
+import {Alert, ListItemButton, Paper, Snackbar, Typography} from "@mui/material";
 import {css} from "@emotion/react";
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
@@ -66,5 +66,15 @@ export const RecipeList:React.FC<RecipeListProps> = ({onReportSelected})=>{
                 )
             }
         </List>
+        {
+            lastError ?
+                <Snackbar open={true}
+                          anchorOrigin={{ vertical: 'top', horizontal: 'left'}}
+                          autoHideDuration={5000}
+                          onClose={()=>setLastError(undefined)}
+                          >
+                    <Alert severity="error">{lastError}</Alert>
+                </Snackbar> : undefined
+        }
     </Paper>
 }
