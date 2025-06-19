@@ -36,7 +36,7 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 		Each recipe should, at the very least, have a title at the top; at least one author following 'By:'; at least one kind of tag (the more, the better), a full method and every ingredient mentioned in the method should be included in the ingredients list.
 		If vital information like title, author or description are missing then these must be flagged.
 
-		Please pay special attention to the ingredients list.  Ingredients are rendered in the format {quantity} {unit} {name}, {optional suffix}. If you see any ingredients not following this pattern please flag this is a problem.  Extra whitespace should be ignored.
+		Please pay special attention to the ingredients list.  Ingredients are rendered in the format {quantity} {unit} {name}, {optional suffix}. If you see any ingredients not following this pattern please flag this is a problem.  Extra whitespace or multiple commas should be ignored.
 		For example:
 		- '4 tbsp white vermouth, such as Noilly Prat' is a good ingredient line because it clearly contains the quantity, unit, name and some extra information at the end.
 		- '(10g) 6 tbsp fresh oregano leaves' is also a good ingredient line because the quantity has been specified twice in different units (10 grammes and 6 tbsp)
@@ -44,13 +44,15 @@ func New(ctx context.Context, modelName string, region string) *LLM {
 		- '  Freshly ground back pepper' is also fine because it is used as seasoning and does not need a defined quantity
 		- 'finely 10 g chopped fresh flat-leaf parsley' is a bad ingredient line because it should read '10g flat-leaf parsley, fresh and finely chopped'
 		- 'long 2  red chillies, finely chopped' is a bad ingredient line because it should read '2 long red chillies, finely chopped'
-		
+		- Multiple commas, for example '200 g frozen petit pois peas,, defrosted and roughly crushed' are just a formatting glitch and should be ignored.
+		- '1 x 400 g tin cherry tomatoes' is a bad ingredient because it is a "composite unit" (a multiple, followed by a unit). Instead, this should be written as a single consistent unit - '400 g tinned cherry tomatoes (approx. 1 tin)'
+
 		Over-long or over-short method steps should also be flagged.  A method step should contain only one specific operation for cooking the recipe, for example:
 		- 'Occasionally scrape down the mixture from the sides of the bowl with a rubber spatula.' is a good length of a step
 		- 'Break the egg into a small bowl and briefly blend with a fork. Add the egg to the butter and sugar, a little at a time, beating continuously. (Should the mixture curdle, add a spoonful of the flour.)' is also a good length
 		- 'Add the flour and baking powder, turning the mixture slowly. Stir the apricots and water into the mixture. (This will alter the consistency alarmingly, but do not worry, all will come good in the oven.) Transfer the batter to the baking dish and bake for 35 minutes.' is not a good step, because it combines three seperate steps into one sentence making it too long
 
-		Do not flag capitalization in tag fields as these are re-rendered by the app
+		Do not flag capitalization or extra commas in tag fields as these are re-rendered by the app
 
 		If no issues are found, do not return the whole document, simply return <!HEALTH No issues found :+1>
 		If you determine any text to be in violation of content filtering please remove it from the output and indicate this using <!HEALTH redacted>
@@ -104,7 +106,6 @@ func (m *LLM) generateInput(content string, format RecipeFormat) *bedrockruntime
 		ModelId: &m.ModelId,
 		System: []types.SystemContentBlock{
 			m.systemContentBlock,
-			//&types.SystemContentBlockMemberCachePoint{Value: types.CachePointBlock{Type: types.CachePointTypeDefault}},
 		},
 		Messages: []types.Message{
 			requestMsg,
