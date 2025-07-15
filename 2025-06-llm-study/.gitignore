@@ -3,4 +3,4 @@ recipe-health-checker
 
 #other stuff
 .DS_Store
-.idea
+*.md
