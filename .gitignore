@@ -1,6 +1,1 @@
-# compiled outputs
-recipe-health-checker
-
-#other stuff
-.DS_Store
-*.md
+.idea
